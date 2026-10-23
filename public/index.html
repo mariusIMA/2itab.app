@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone-Peep</title>
+<style>
+:root{--bg:#eef1f4;--panel:#fff;--ink:#0f000f;--mute:#785d76;--line:#d8dee4;--accent:#0f5fdb;--accent-ink:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#000000;--panel:#13031d;--ink:#e8edf2;--mute:#93a1ae;--line:#432a43;--accent:#d06aff;--accent-ink:#0f161d;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:2rem;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 20px}
+.search{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+input[type=search],select{max-width:100%;font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+input[type=search]{flex:1;min-width:200px}
+button{font:inherit;cursor:pointer}
+.go,.more{padding:12px 20px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.more{display:block;margin:20px auto 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.count{color:var(--mute);margin:8px 0 16px;font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;text-align:left;color:inherit;display:flex;flex-direction:column;gap:8px;min-height:80px}
+.card:hover{border-color:var(--accent)}
+.thumb{position:relative;height:150px;background:var(--bg);border-radius:4px;display:grid;place-items:center;font-size:2rem;color:var(--mute);overflow:hidden}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.price{font-size:.9rem;color:var(--accent);font-weight:600}.price.none{color:var(--mute);font-weight:400}
+.note{color:var(--mute);font-size:.8rem;margin-top:16px}
+.card b{font-size:.95rem;line-height:1.3}
+.msg{color:var(--mute);padding:24px 0}
+dialog{width:min(720px,94vw);max-height:90vh;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:0}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.dhead{display:flex;gap:16px;align-items:center;padding:20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+.dhead .thumb{width:90px;height:120px;flex:none}
+.dhead h2{margin:0;font-size:1.3rem}
+.close{margin-left:auto;align-self:flex-start;background:none;border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink)}
+.dbody{padding:8px 20px 20px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;vertical-align:top;padding:6px 8px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+th{width:34%;color:var(--mute);font-weight:500}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Phone-Peep</h1>
+  <p class="sub" id="sub">Search phones and view their specifications.</p>
+  <form class="search" id="form" role="search">
+    <input type="search" id="q" placeholder="Search by model, e.g. Pixel 8" aria-label="Search phones" autofocus>
+    <select id="brand" aria-label="Brand"><option value="">All brands</option></select>
+    <select id="cur" aria-label="Currency"><option>NOK</option><option>USD</option></select>
+    <button class="go" type="submit">Search</button>
+  </form>
+  <div class="count" id="count" aria-live="polite"></div>
+  <div id="view"></div>
+</main>
+<dialog id="dlg"></dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const view = $('#view'), dlg = $('#dlg');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const api = async p => { const r = await fetch('/api/' + p); if (!r.ok) throw new Error('Request failed'); return r.json(); };
+const label = k => { const t = k.replace(/[_-]+/g, ' ').trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
+const val = v => /^https?:\/\/\S+$/.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a>` : esc(v);
+const fmt = { NOK: new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }),
+              USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }) };
+let cur = 'NOK', offset = 0, timer;
+try { cur = localStorage.getItem('cur') || 'NOK'; } catch (e) {}
+$('#cur').value = cur;
+const byId = new Map();
+
+const priceText = d => d.price ? '≈ ' + fmt[cur].format(cur === 'NOK' ? d.price.nok : d.price.usd) : (d.priceText || 'Price not listed');
+const priceCls = d => d.price || d.priceText ? 'price' : 'price none';
+const thumb = d => `<div class="thumb"><span>${esc((d.brand || d.name || '?')[0])}</span>${d.hasImg ? `<img src="/api/img/${d.id}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>`;
+const cardHTML = d => `<button class="card" data-id="${d.id}">${thumb(d)}<b>${esc(d.name)}</b><span class="${priceCls(d)}">${esc(priceText(d))}</span></button>`;
+
+function setBrands(counts, q) {
+  const sel = $('#brand'), cur0 = sel.value;
+  let list = Object.entries(counts);
+  list = q ? list.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) : list.sort((a, b) => a[0].localeCompare(b[0]));
+  if (cur0 && !counts[cur0]) list.push([cur0, 0]);
+  const total = Object.values(counts).reduce((x, y) => x + y, 0);
+  sel.innerHTML = `<option value="">All brands (${total.toLocaleString()})</option>` +
+    list.map(([b, n]) => `<option value="${esc(b)}">${esc(b)} (${n.toLocaleString()})</option>`).join('');
+  sel.value = cur0;
+}
+
+async function run(append = false) {
+  if (!append) { offset = 0; view.innerHTML = '<p class="msg">Loading…</p>'; }
+  try {
+    const q = $('#q').value;
+    const { total, items, brandCounts } = await api(`search?q=${encodeURIComponent(q)}&brand=${encodeURIComponent($('#brand').value)}&offset=${offset}`);
+    if (!append) setBrands(brandCounts, q.trim());
+    $('#count').textContent = `${total.toLocaleString()} phone${total === 1 ? '' : 's'}`;
+    if (!append && !items.length) return view.innerHTML = '<p class="msg">No phones found. Try fewer words or a different spelling.</p>';
+    if (!append) view.innerHTML = '<div class="grid"></div><p class="note">Prices are converted from the dataset\'s original currency (BDT) at an approximate current rate.</p>';
+    items.forEach(d => byId.set(String(d.id), d));
+    view.querySelector('.grid').insertAdjacentHTML('beforeend', items.map(cardHTML).join(''));
+    offset += items.length;
+    view.querySelector('.more')?.remove();
+    if (offset < total) view.querySelector('.grid').insertAdjacentHTML('afterend', '<button class="more">Show more</button>');
+  } catch (e) { view.innerHTML = `<p class="msg">${esc(e.message)}</p>`; }
+}
+
+async function showDevice(id) {
+  const d = await api('device/' + id);
+  const rows = `<tr><th>Price (${cur})</th><td>${esc(priceText(d))}</td></tr>` +
+    Object.entries(d.specs).filter(([, v]) => String(v).trim() !== '')
+      .map(([k, v]) => `<tr><th>${esc(label(k))}</th><td>${val(v)}</td></tr>`).join('');
+  dlg.innerHTML = `<div class="dhead">${thumb(d)}<h2>${esc(d.name)}</h2><button class="close" data-close>Close</button></div><div class="dbody"><table>${rows}</table></div>`;
+  dlg.showModal();
+}
+
+$('#form').addEventListener('submit', e => { e.preventDefault(); run(); });
+$('#q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
+$('#brand').addEventListener('change', () => run());
+$('#cur').addEventListener('change', e => {
+  cur = e.target.value; try { localStorage.setItem('cur', cur); } catch (x) {}
+  document.querySelectorAll('.card').forEach(c => { const d = byId.get(c.dataset.id), p = c.querySelector('.price'); if (d && p) p.textContent = priceText(d); });
+});
+view.addEventListener('click', e => {
+  if (e.target.closest('.more')) return run(true);
+  const c = e.target.closest('[data-id]'); if (c) showDevice(c.dataset.id);
+});
+dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-close]')) dlg.close(); });
+
+api('meta').then(m => { $('#sub').textContent = `Search ${m.total.toLocaleString()} phones and view their specifications.`; }).catch(() => {});
+run();
+</script>
+
+<script>
+// Magnetic + 3D tilt cards: cards drift toward the mouse, and the card under it tilts toward the cursor.
+(() => {
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;   // skip touch screens
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;      // respect accessibility setting
+
+  const RADIUS = 260;  // how far from the cursor cards react (px)
+  const PULL = 10;     // max drift toward the cursor (px)
+  const LIFT = 0.035;  // extra scale for the card under the cursor
+  const TILT = 18;     // max tilt in degrees (use a negative number to flip the direction)
+  const GLARE = 0.20;  // brightness of the light spot that follows the cursor (0 = off)
+
+  const css = document.createElement('style');
+  css.textContent = `
+    #view .card{position:relative;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .15s}
+    #view .card.mg-on{transition:transform .12s ease-out,border-color .15s}
+    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+      transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,${GLARE}),transparent 60%)}
+    #view .card.mg-on::after{opacity:${GLARE ? 1 : 0}}`;
+  document.head.appendChild(css);
+
+  let mx = -9999, my = -9999, active = false, raf = 0;
+
+  function frame() {
+    raf = 0;
+    const live = active && !document.querySelector('dialog[open]');
+    for (const c of document.querySelectorAll('#view .card')) {
+      const r = c.getBoundingClientRect();
+      const ox = c._mx || 0, oy = c._my || 0;
+      let x = 0, y = 0, s = 1, rx = 0, ry = 0, hot = false;
+      if (live && r.bottom > -RADIUS && r.top < innerHeight + RADIUS) {
+        const w = c.offsetWidth, h = c.offsetHeight;
+        const dx = mx - (r.left + r.width / 2 - ox), dy = my - (r.top + r.height / 2 - oy);
+        const d = Math.hypot(dx, dy);
+        if (d < RADIUS) {
+          const k = (1 - d / RADIUS) ** 2 * Math.min(d / 50, 1);  // fades with distance, and near the centre
+          x = (dx / (d || 1)) * PULL * k;
+          y = (dy / (d || 1)) * PULL * k;
+        }
+        if (Math.abs(dx) <= w / 2 && Math.abs(dy) <= h / 2) {      // cursor is on this card
+          hot = true; s = 1 + LIFT;
+          ry = (dx / (w / 2)) * TILT;
+          rx = (-dy / (h / 2)) * TILT;
+          c.style.setProperty('--gx', ((dx / w + 0.5) * 100).toFixed(1) + '%');
+          c.style.setProperty('--gy', ((dy / h + 0.5) * 100).toFixed(1) + '%');
+        }
+      }
+      const t = x || y || hot
+        ? `perspective(700px) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg) scale(${s})`
+        : '';
+      if (c._t !== t) { c.style.transform = t; c._t = t; }
+      if (c._hot !== hot) { c.classList.toggle('mg-on', hot); c._hot = hot; }
+      c._mx = x; c._my = y;
+    }
+  }
+
+  const queue = () => raf || (raf = requestAnimationFrame(frame));
+  addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; active = true; queue(); }, { passive: true });
+  addEventListener('scroll', queue, { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => { active = false; queue(); });
+})();
+</script>
+</body>
+</html>
