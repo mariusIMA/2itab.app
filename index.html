@@ -9,7 +9,7 @@
 html[data-theme="light"]{--bg:#ecf7f2;--panel:#fff;--ink:#0f000f;--mute:#5d7874;--line:#d8dee4;--accent:#0f5fdb;--accent-ink:#fff;color-scheme:light}
 html[data-theme="dark"]{--bg:#111111;--panel:#13031d;--ink:#e8edf2;--mute:#93a1ae;--line:#2a433d;--accent:#6affd2;--accent-ink:#12241d;color-scheme:dark}
 *{box-sizing:border-box}
-body{filter:url(#distort);margin:0;background-color:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+body{;margin:0;background-color:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 h1{font-size:2rem;margin:0;letter-spacing:-.02em}
@@ -53,6 +53,10 @@ a{color:var(--accent)}
 <body>
 <main>
   <h1>Phone-Peep</h1>
+      <label class="theme-toggle" for="themeToggle">
+      <span>Dark mode</span>
+      <input id="themeToggle" type="checkbox" aria-label="Toggle light and dark mode">
+    </label>
   <p class="sub" id="sub">Search phones and view their specifications.</p>
   <form class="search" id="form" role="search">
     <input type="search" id="q" placeholder="Search by model, e.g. Pixel 8" aria-label="Search phones" autofocus>
@@ -222,6 +226,28 @@ function priceOf(d) {
   if (d.pc === 'USD') return rate ? { usd: d.pa, nok: d.pa * rate.nok / rate.usd } : null;
   return rate ? { usd: d.pa * rate.usd, nok: d.pa * rate.nok } : null;
 }
+
+function getThemePreference() {
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch (e) {}
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const toggle = $('#themeToggle');
+  if (toggle) toggle.checked = theme === 'dark';
+  try { localStorage.setItem('theme', theme); } catch (e) {}
+}
+
+const themeToggle = $('#themeToggle');
+if (themeToggle) {
+  themeToggle.addEventListener('change', e => applyTheme(e.target.checked ? 'dark' : 'light'));
+}
+applyTheme(getThemePreference());
+  
 const priceText = d => { const p = priceOf(d); return p ? '≈ ' + fmt[cur].format(cur === 'NOK' ? p.nok : p.usd) : (d.pt || 'Price not listed'); };
 const hasPrice = d => priceOf(d) || d.pt;
 
