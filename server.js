@@ -2,7 +2,6 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 
 // ---- CSV parser (handles quotes, commas and newlines inside quotes) ----
@@ -205,4 +204,5 @@ app.get('/api/img/:id', async (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.listen(PORT, () => console.log(`Phone search running at http://localhost:${PORT}`));
+module.exports = app;
+  
