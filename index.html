@@ -5,41 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Phone-Peep</title>
 <style>
-:root{--bg:#3ef9aa;--panel:#fff;--ink:#0f000f;--mute:#785d76;--line:#d8dee4;--accent:#0f5fdb;--accent-ink:#fff;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0f0f59;--panel:#13031d;--ink:#e8edf2;--mute:#93a1ae;--line:#432a43;--accent:#d06aff;--accent-ink:#0f161d;color-scheme:dark}}
-html[data-theme="light"]{--bg:#3ef9aa;--panel:#fff;--ink:#0f000f;--mute:#785d76;--line:#d8dee4;--accent:#0f5fdb;--accent-ink:#fff;color-scheme:light}
-html[data-theme="dark"]{--bg:#111111;--panel:#13031d;--ink:#e8edf2;--mute:#93a1ae;--line:#432a43;--accent:#d06aff;--accent-ink:#0f161d;color-scheme:dark}
+:root{--bg:#050308;--panel:#190b26;--ink:#f1e9f7;--mute:#a592b5;--line:#34204a;--accent:#c75bff;--accent-ink:#1a0626;color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-h1{font-size:2rem;margin:0;letter-spacing:-.02em}
+main{max-width:1200px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:2rem;margin:0 0 4px;letter-spacing:-.02em}
 .sub{color:var(--mute);margin:0 0 20px}
 .search{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-input[type=search],select{max-width:100%;font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink)}
+input[type=search],select{max-width:100%;font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
 input[type=search]{flex:1;min-width:200px}
 button{font:inherit;cursor:pointer}
-.go,.more,.reset{padding:12px 20px;border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);font-weight:600}
-.reset{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.theme-toggle{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);font-size:.9rem}
-.theme-toggle input{appearance:none;position:relative;width:42px;height:24px;background:var(--line);border-radius:999px;cursor:pointer;transition:background .2s ease;margin:0}
-.theme-toggle input::before{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s ease}
-.theme-toggle input:checked{background:var(--accent)}
-.theme-toggle input:checked::before{transform:translateX(18px)}
+.go,.more{padding:12px 20px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:600}
 .more{display:block;margin:20px auto 0}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .count{color:var(--mute);margin:8px 0 16px;font-size:.9rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;text-align:left;color:inherit;display:flex;flex-direction:column;gap:8px;min-height:80px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;text-align:left;color:inherit;display:flex;flex-direction:column;gap:8px;min-height:80px}
 .card:hover{border-color:var(--accent)}
+.card b{font-size:.95rem;line-height:1.3}
 .thumb{position:relative;height:150px;background:var(--bg);border-radius:4px;display:grid;place-items:center;font-size:2rem;color:var(--mute);overflow:hidden}
 .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
 .price{font-size:.9rem;color:var(--accent);font-weight:600}.price.none{color:var(--mute);font-weight:400}
 .note{color:var(--mute);font-size:.8rem;margin-top:16px}
-.card b{font-size:.95rem;line-height:1.3}
-.msg{color:var(--mute);padding:24px 0}
+.msg{color:var(--mute);padding:24px 0}.err{color:#ff7a8a}
 dialog{width:min(720px,94vw);max-height:90vh;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:0}
-dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(0,0,0,.65)}
 .dhead{display:flex;gap:16px;align-items:center;padding:20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
 .dhead .thumb{width:90px;height:120px;flex:none}
 .dhead h2{margin:0;font-size:1.3rem}
@@ -53,142 +43,263 @@ a{color:var(--accent)}
 </head>
 <body>
 <main>
-  <header>
-    <h1>Phone-Peep</h1>
-    <label class="theme-toggle" for="themeToggle">
-      <span>Dark mode</span>
-      <input id="themeToggle" type="checkbox" aria-label="Toggle light and dark mode">
-    </label>
-  </header>
+  <h1>Phone-Peep</h1>
   <p class="sub" id="sub">Search phones and view their specifications.</p>
   <form class="search" id="form" role="search">
     <input type="search" id="q" placeholder="Search by model, e.g. Pixel 8" aria-label="Search phones" autofocus>
     <select id="brand" aria-label="Brand"><option value="">All brands</option></select>
     <select id="cur" aria-label="Currency"><option>NOK</option><option>USD</option></select>
     <button class="go" type="submit">Search</button>
-    <button class="reset" type="button" id="reset">Clear</button>
   </form>
   <div class="count" id="count" aria-live="polite"></div>
-  <div id="view"></div>
+  <div id="view"><p class="msg">Loading phones…</p></div>
 </main>
 <dialog id="dlg"></dialog>
 
 <script>
+// ===== Settings =====
+const SOURCE_CURRENCY = 'BDT';                       // currency the prices in your dataset are written in
+const DATA_NAMES = ['data.csv', 'data.json'];        // main dataset, placed next to this file
+const EXTRA_NAMES = ['extra.csv', 'extra.json'];     // optional extra phones, same columns
+
+// <core>
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (c === '"') q = false;
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell); cell = '';
+      if (row.some(x => x !== '')) rows.push(row);
+      row = [];
+    } else cell += c;
+  }
+  row.push(cell);
+  if (row.some(x => x !== '')) rows.push(row);
+  const head = rows.shift().map(h => h.trim());
+  return rows.map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] ?? '').trim()])));
+}
+function rowsFromJSON(raw) {
+  let j = JSON.parse(raw);
+  if (!Array.isArray(j)) j = Object.values(j).find(Array.isArray) || Object.values(j);
+  return j.filter(x => x && typeof x === 'object').map(o => Object.fromEntries(
+    Object.entries(o).map(([k, v]) => [k, v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v)])));
+}
+const split = s => String(s).toLowerCase().replace(/([a-z])(\d)/g, '$1 $2').replace(/(\d)([a-z])/g, '$1 $2')
+  .replace(/[^a-z0-9\u00c0-\u024f]+/g, ' ').trim();
+function lev(a, b) {
+  const m = a.length, n = b.length; let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+function tokenScore(t, words) {
+  const numeric = /^\d+$/.test(t); let best = -1;
+  for (const w of words) {
+    let sc = -1;
+    if (w === t) sc = 0;
+    else if (w.startsWith(t)) sc = 0.5;
+    else if (!numeric && t.length >= 3 && w.includes(t)) sc = 1.5;
+    else if (!numeric && t.length >= 4) {
+      const d = Math.min(lev(t, w), lev(t, w.slice(0, t.length)));
+      if (d <= (t.length <= 5 ? 1 : 2)) sc = 3 + d;
+    }
+    if (sc >= 0 && (best < 0 || sc < best)) best = sc;
+  }
+  return best;
+}
+function matchScore(item, q) {
+  if (!q.tokens.length) return 0;
+  if (item.compact.includes(q.compact)) return -1;
+  let total = 0;
+  for (const t of q.tokens) { const s = tokenScore(t, item.words); if (s < 0) return null; total += s; }
+  return total;
+}
+// "21.999" and "1,299" are thousands (3 digits after the last separator); "12.50" is a decimal.
+function parseNum(s) {
+  const m = String(s).match(/\d[\d.,]*/); if (!m) return NaN;
+  const t = m[0].replace(/[.,]+$/, '');
+  const sep = Math.max(t.lastIndexOf('.'), t.lastIndexOf(','));
+  if (sep < 0) return parseFloat(t);
+  if (t.length - sep - 1 === 3) return parseFloat(t.replace(/[.,]/g, ''));
+  return parseFloat(t.slice(0, sep).replace(/[.,]/g, '') + '.' + t.slice(sep + 1));
+}
+function buildItems(rows) {
+  const keys = Object.keys(rows[0]);
+  const norm = k => k.toLowerCase().replace(/[^a-z]/g, '');
+  const find = re => keys.find(k => re.test(norm(k)));
+  const brandK = find(/^(brand|company|manufacturer|maker)/);
+  let nameK = find(/^(model|name|device|title|phone)/);
+  if (nameK === brandK) nameK = keys.find(k => k !== brandK && /model|name|device|title/.test(norm(k)));
+  nameK = nameK || keys.find(k => k !== brandK) || keys[0];
+  const imgK = find(/^(image|img|picture|photo|thumbnail)/) ||
+    keys.find(k => /^https?:\/\/\S+\.(jpe?g|png|webp)/i.test(rows[0][k]));
+  const priceKs = keys.filter(k => /price|cost/i.test(k)).sort((a, b) => /usd|dollar/i.test(b) - /usd|dollar/i.test(a));
+  const items = rows.map((r, id) => {
+    const brand = brandK ? r[brandK] : '';
+    let name = r[nameK] || '(unnamed)';
+    if (brand && !name.toLowerCase().startsWith(brand.toLowerCase())) name = brand + ' ' + name;
+    const img = imgK && /^https?:\/\//i.test(r[imgK]) ? r[imgK].replace(/^http:/i, 'https:') : '';
+    let pa = null, pc = 'SRC', pt = '';
+    for (const k of priceKs) {
+      const v = r[k] || '';
+      if (v.trim() && !pt) pt = v.trim();
+      const n = parseNum(v);
+      if (n > 0 && pa == null) { pa = n; pc = /usd|dollar/i.test(k) || /\$|usd/i.test(v) ? 'USD' : 'SRC'; }
+    }
+    const sp = split(name);
+    return { id, name, brand, img, pa, pc, pt, row: r, words: sp.split(' '), compact: sp.replace(/ /g, '') };
+  });
+  return { items, keys, priceKs, imgK, nameK, brandK };
+}
+// </core>
+
+// ===== Page =====
 const $ = s => document.querySelector(s);
 const view = $('#view'), dlg = $('#dlg');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const api = async p => { const r = await fetch('/api/' + p); if (!r.ok) throw new Error('Request failed'); return r.json(); };
 const label = k => { const t = k.replace(/[_-]+/g, ' ').trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
 const val = v => /^https?:\/\/\S+$/.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a>` : esc(v);
 const fmt = { NOK: new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }),
               USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }) };
-let cur = 'NOK', offset = 0, timer;
+let cur = 'NOK', all = [], priceKs = [], imgK = '', results = [], shown = 0, timer, rate = null;
 try { cur = localStorage.getItem('cur') || 'NOK'; } catch (e) {}
 $('#cur').value = cur;
-const byId = new Map();
 
-function getThemePreference() {
+// Exchange rate: live from open.er-api.com (cached 12 h); approximate fallback for BDT.
+async function loadRate() {
+  const S = SOURCE_CURRENCY;
+  try { const c = JSON.parse(localStorage.getItem('rate')); if (c && c.s === S && Date.now() - c.t < 432e5) return (rate = c.r); } catch (e) {}
   try {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'light' || saved === 'dark') return saved;
+    const j = await (await fetch('https://open.er-api.com/v6/latest/USD')).json();
+    const s = j.rates[S], n = j.rates.NOK;
+    if (s > 0 && n > 0) {
+      rate = { usd: 1 / s, nok: n / s };
+      try { localStorage.setItem('rate', JSON.stringify({ s: S, t: Date.now(), r: rate })); } catch (e) {}
+      return rate;
+    }
   } catch (e) {}
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  if (S === 'BDT') rate = { usd: 1 / 122, nok: 0.0836 };   // rough fallback
+  return rate;
 }
-
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const toggle = $('#themeToggle');
-  if (toggle) toggle.checked = theme === 'dark';
-  try { localStorage.setItem('theme', theme); } catch (e) {}
+function priceOf(d) {
+  if (d.pa == null) return null;
+  if (d.pc === 'USD') return rate ? { usd: d.pa, nok: d.pa * rate.nok / rate.usd } : null;
+  return rate ? { usd: d.pa * rate.usd, nok: d.pa * rate.nok } : null;
 }
+const priceText = d => { const p = priceOf(d); return p ? '≈ ' + fmt[cur].format(cur === 'NOK' ? p.nok : p.usd) : (d.pt || 'Price not listed'); };
+const hasPrice = d => priceOf(d) || d.pt;
 
-const themeToggle = $('#themeToggle');
-if (themeToggle) {
-  themeToggle.addEventListener('change', e => applyTheme(e.target.checked ? 'dark' : 'light'));
-}
-applyTheme(getThemePreference());
-
-const priceText = d => d.price ? '≈ ' + fmt[cur].format(cur === 'NOK' ? d.price.nok : d.price.usd) : (d.priceText || 'Price not listed');
-const priceCls = d => d.price || d.priceText ? 'price' : 'price none';
-const thumb = d => `<div class="thumb"><span>${esc((d.brand || d.name || '?')[0])}</span>${d.hasImg ? `<img src="/api/img/${d.id}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>`;
-const cardHTML = d => `<button class="card" data-id="${d.id}">${thumb(d)}<b>${esc(d.name)}</b><span class="${priceCls(d)}">${esc(priceText(d))}</span></button>`;
+const thumb = d => `<div class="thumb"><span>${esc((d.brand || d.name || '?')[0])}</span>${d.img ? `<img src="${esc(d.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</div>`;
+const cardHTML = d => `<button class="card" data-id="${d.id}">${thumb(d)}<b>${esc(d.name)}</b><span class="price${hasPrice(d) ? '' : ' none'}">${esc(priceText(d))}</span></button>`;
 
 function setBrands(counts, q) {
-  const sel = $('#brand'), cur0 = sel.value;
-  let list = Object.entries(counts || {});
+  const sel = $('#brand'), keep = sel.value;
+  let list = Object.entries(counts);
   list = q ? list.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) : list.sort((a, b) => a[0].localeCompare(b[0]));
-  if (cur0 && !counts?.[cur0]) list.push([cur0, 0]);
-  const total = Object.values(counts || {}).reduce((x, y) => x + y, 0);
+  if (keep && !counts[keep]) list.push([keep, 0]);
+  const total = Object.values(counts).reduce((x, y) => x + y, 0);
   sel.innerHTML = `<option value="">All brands (${total.toLocaleString()})</option>` +
     list.map(([b, n]) => `<option value="${esc(b)}">${esc(b)} (${n.toLocaleString()})</option>`).join('');
-  if (cur0 && Array.from(sel.options).some(o => o.value === cur0)) {
-    sel.value = cur0;
-  } else {
-    sel.value = '';
+  sel.value = keep;
+}
+
+function run() {
+  const sp = split($('#q').value);
+  const q = { tokens: sp.split(' ').filter(Boolean), compact: sp.replace(/ /g, '') };
+  const brand = $('#brand').value, matches = [], counts = {};
+  for (const d of all) {
+    const s = matchScore(d, q);
+    if (s === null) continue;
+    matches.push([s, d]);
+    const b = d.brand || 'Other'; counts[b] = (counts[b] || 0) + 1;
   }
+  let list = brand ? matches.filter(([, d]) => d.brand === brand) : matches;
+  if (q.tokens.length) list = list.slice().sort((a, b) => a[0] - b[0] || a[1].name.length - b[1].name.length);
+  results = list.map(x => x[1]); shown = 0;
+  setBrands(counts, q.tokens.length > 0);
+  $('#count').textContent = `${results.length.toLocaleString()} phone${results.length === 1 ? '' : 's'}`;
+  if (!results.length) return view.innerHTML = '<p class="msg">No phones found. Try fewer words or a different spelling.</p>';
+  view.innerHTML = '<div class="grid"></div><p class="note">Prices are converted from the dataset\'s original currency at an approximate current rate.</p>';
+  more();
+}
+function more() {
+  const next = results.slice(shown, shown + 48); shown += next.length;
+  view.querySelector('.grid').insertAdjacentHTML('beforeend', next.map(cardHTML).join(''));
+  view.querySelector('.more')?.remove();
+  if (shown < results.length) view.querySelector('.grid').insertAdjacentHTML('afterend', '<button class="more">Show more</button>');
 }
 
-async function run(append = false) {
-  if (!append) { offset = 0; view.innerHTML = '<p class="msg">Loading…</p>'; }
-  try {
-    const q = $('#q').value;
-    const { total, items, brandCounts } = await api(`search?q=${encodeURIComponent(q)}&brand=${encodeURIComponent($('#brand').value)}&offset=${offset}`);
-    if (!append) setBrands(brandCounts, q.trim());
-    $('#count').textContent = `${total.toLocaleString()} phone${total === 1 ? '' : 's'}`;
-    if (!append && !items.length) return view.innerHTML = '<p class="msg">No phones found. Try fewer words or a different spelling.</p>';
-    if (!append) view.innerHTML = '<div class="grid"></div><p class="note">Prices are converted from the dataset\'s original currency (BDT) at an approximate current rate.</p>';
-    items.forEach(d => byId.set(String(d.id), d));
-    view.querySelector('.grid').insertAdjacentHTML('beforeend', items.map(cardHTML).join(''));
-    offset += items.length;
-    view.querySelector('.more')?.remove();
-    if (offset < total) view.querySelector('.grid').insertAdjacentHTML('afterend', '<button class="more">Show more</button>');
-  } catch (e) { view.innerHTML = `<p class="msg">${esc(e.message)}</p>`; }
-}
-
-async function showDevice(id) {
-  const d = await api('device/' + id);
-  const rows = `<tr><th>Price (${cur})</th><td>${esc(priceText(d))}</td></tr>` +
-    Object.entries(d.specs || {}).filter(([, v]) => String(v).trim() !== '')
+function showDevice(id) {
+  const d = all[+id]; if (!d) return;
+  const orig = d.pt && priceOf(d) ? `<tr><th>Original listing</th><td>${esc(d.pt)}</td></tr>` : '';
+  const rows = `<tr><th>Price (${cur})</th><td>${esc(priceText(d))}</td></tr>${orig}` +
+    Object.entries(d.row).filter(([k, v]) => !priceKs.includes(k) && k !== imgK && String(v).trim() !== '')
       .map(([k, v]) => `<tr><th>${esc(label(k))}</th><td>${val(v)}</td></tr>`).join('');
   dlg.innerHTML = `<div class="dhead">${thumb(d)}<h2>${esc(d.name)}</h2><button class="close" data-close>Close</button></div><div class="dbody"><table>${rows}</table></div>`;
   dlg.showModal();
 }
 
-function clearFilters() {
-  $('#q').value = '';
-  $('#brand').value = '';
-  run();
-}
-
 $('#form').addEventListener('submit', e => { e.preventDefault(); run(); });
 $('#q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
-$('#brand').addEventListener('change', () => run());
+$('#brand').addEventListener('change', run);
 $('#cur').addEventListener('change', e => {
   cur = e.target.value; try { localStorage.setItem('cur', cur); } catch (x) {}
-  document.querySelectorAll('.card').forEach(c => { const d = byId.get(c.dataset.id), p = c.querySelector('.price'); if (d && p) p.textContent = priceText(d); });
+  document.querySelectorAll('.card').forEach(c => { const d = all[+c.dataset.id], p = c.querySelector('.price'); if (d && p) p.textContent = priceText(d); });
 });
-$('#reset').addEventListener('click', clearFilters);
 view.addEventListener('click', e => {
-  if (e.target.closest('.more')) return run(true);
+  if (e.target.closest('.more')) return more();
   const c = e.target.closest('[data-id]'); if (c) showDevice(c.dataset.id);
 });
 dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-close]')) dlg.close(); });
 
-api('meta').then(m => { $('#sub').textContent = `Search ${m.total.toLocaleString()} phones and view their specifications.`; }).catch(() => {});
-run();
+async function fetchRows(names) {
+  for (const n of names) {
+    try {
+      const r = await fetch(n);
+      if (!r.ok) continue;
+      const raw = new TextDecoder('utf-8').decode(await r.arrayBuffer());
+      if (/^\s*</.test(raw)) continue;                      // host returned an HTML page instead of the file
+      return { name: n, rows: /\.json$/i.test(n) ? rowsFromJSON(raw) : parseCSV(raw) };
+    } catch (e) {}
+  }
+  return null;
+}
+
+(async () => {
+  const [main, rt] = await Promise.all([fetchRows(DATA_NAMES), loadRate()]);
+  if (!main || !main.rows.length) {
+    view.innerHTML = `<p class="msg err">Couldn't load the phone data. Upload your dataset next to index.html and name it <b>data.csv</b> (or data.json).</p>`;
+    return;
+  }
+  let rows = main.rows;
+  for (const n of EXTRA_NAMES) { const ex = await fetchRows([n]); if (ex) rows = rows.concat(ex.rows); }
+  const keys = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  rows = rows.map(r => Object.fromEntries(keys.map(k => [k, r[k] ?? ''])));
+  const built = buildItems(rows);
+  all = built.items; priceKs = built.priceKs; imgK = built.imgK;
+  $('#sub').textContent = `Search ${all.length.toLocaleString()} phones and view their specifications.`;
+  run();
+})();
 </script>
 
 <script>
 // Magnetic + 3D tilt cards: cards drift toward the mouse, and the card under it tilts toward the cursor.
 (() => {
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;   // skip touch screens
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;      // respect accessibility setting
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const RADIUS = 260;  // how far from the cursor cards react (px)
-  const PULL = 10;     // max drift toward the cursor (px)
-  const LIFT = 0.035;  // extra scale for the card under the cursor
-  const TILT = 18;     // max tilt in degrees (use a negative number to flip the direction)
-  const GLARE = 0.20;  // brightness of the light spot that follows the cursor (0 = off)
+  const RADIUS = 260, PULL = 10, LIFT = 0.035, TILT = 10, GLARE = 0.16;
 
   const css = document.createElement('style');
   css.textContent = `
@@ -200,7 +311,6 @@ run();
   document.head.appendChild(css);
 
   let mx = -9999, my = -9999, active = false, raf = 0;
-
   function frame() {
     raf = 0;
     const live = active && !document.querySelector('dialog[open]');
@@ -213,11 +323,11 @@ run();
         const dx = mx - (r.left + r.width / 2 - ox), dy = my - (r.top + r.height / 2 - oy);
         const d = Math.hypot(dx, dy);
         if (d < RADIUS) {
-          const k = (1 - d / RADIUS) ** 2 * Math.min(d / 50, 1);  // fades with distance, and near the centre
+          const k = (1 - d / RADIUS) ** 2 * Math.min(d / 50, 1);
           x = (dx / (d || 1)) * PULL * k;
           y = (dy / (d || 1)) * PULL * k;
         }
-        if (Math.abs(dx) <= w / 2 && Math.abs(dy) <= h / 2) {      // cursor is on this card
+        if (Math.abs(dx) <= w / 2 && Math.abs(dy) <= h / 2) {
           hot = true; s = 1 + LIFT;
           ry = (dx / (w / 2)) * TILT;
           rx = (-dy / (h / 2)) * TILT;
@@ -233,13 +343,11 @@ run();
       c._mx = x; c._my = y;
     }
   }
-
   const queue = () => raf || (raf = requestAnimationFrame(frame));
   addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; active = true; queue(); }, { passive: true });
   addEventListener('scroll', queue, { passive: true });
   document.documentElement.addEventListener('mouseleave', () => { active = false; queue(); });
 })();
 </script>
-  
 </body>
 </html>
