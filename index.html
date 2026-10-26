@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Phone Peep</title>
+<title>Phone-Peep</title>
 <style>
 :root{--bg:#3ef9aa;--panel:#fff;--ink:#0f000f;--mute:#785d76;--line:#d8dee4;--accent:#0f5fdb;--accent-ink:#fff;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--bg:#0f0f59;--panel:#13031d;--ink:#e8edf2;--mute:#93a1ae;--line:#432a43;--accent:#d06aff;--accent-ink:#0f161d;color-scheme:dark}}
@@ -16,7 +16,8 @@ h1{font-size:2rem;margin:0 0 4px;letter-spacing:-.02em}
 input[type=search],select{max-width:100%;font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink)}
 input[type=search]{flex:1;min-width:200px}
 button{font:inherit;cursor:pointer}
-.go,.more{padding:12px 20px;border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.go,.more,.reset{padding:12px 20px;border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.reset{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .more{display:block;margin:20px auto 0}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .count{color:var(--mute);margin:8px 0 16px;font-size:.9rem}
@@ -51,6 +52,7 @@ a{color:var(--accent)}
     <select id="brand" aria-label="Brand"><option value="">All brands</option></select>
     <select id="cur" aria-label="Currency"><option>NOK</option><option>USD</option></select>
     <button class="go" type="submit">Search</button>
+    <button class="reset" type="button" id="reset">Clear</button>
   </form>
   <div class="count" id="count" aria-live="polite"></div>
   <div id="view"></div>
@@ -78,13 +80,17 @@ const cardHTML = d => `<button class="card" data-id="${d.id}">${thumb(d)}<b>${es
 
 function setBrands(counts, q) {
   const sel = $('#brand'), cur0 = sel.value;
-  let list = Object.entries(counts);
+  let list = Object.entries(counts || {});
   list = q ? list.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) : list.sort((a, b) => a[0].localeCompare(b[0]));
-  if (cur0 && !counts[cur0]) list.push([cur0, 0]);
-  const total = Object.values(counts).reduce((x, y) => x + y, 0);
+  if (cur0 && !counts?.[cur0]) list.push([cur0, 0]);
+  const total = Object.values(counts || {}).reduce((x, y) => x + y, 0);
   sel.innerHTML = `<option value="">All brands (${total.toLocaleString()})</option>` +
     list.map(([b, n]) => `<option value="${esc(b)}">${esc(b)} (${n.toLocaleString()})</option>`).join('');
-  sel.value = cur0;
+  if (cur0 && Array.from(sel.options).some(o => o.value === cur0)) {
+    sel.value = cur0;
+  } else {
+    sel.value = '';
+  }
 }
 
 async function run(append = false) {
@@ -107,10 +113,16 @@ async function run(append = false) {
 async function showDevice(id) {
   const d = await api('device/' + id);
   const rows = `<tr><th>Price (${cur})</th><td>${esc(priceText(d))}</td></tr>` +
-    Object.entries(d.specs).filter(([, v]) => String(v).trim() !== '')
+    Object.entries(d.specs || {}).filter(([, v]) => String(v).trim() !== '')
       .map(([k, v]) => `<tr><th>${esc(label(k))}</th><td>${val(v)}</td></tr>`).join('');
   dlg.innerHTML = `<div class="dhead">${thumb(d)}<h2>${esc(d.name)}</h2><button class="close" data-close>Close</button></div><div class="dbody"><table>${rows}</table></div>`;
   dlg.showModal();
+}
+
+function clearFilters() {
+  $('#q').value = '';
+  $('#brand').value = '';
+  run();
 }
 
 $('#form').addEventListener('submit', e => { e.preventDefault(); run(); });
@@ -120,6 +132,7 @@ $('#cur').addEventListener('change', e => {
   cur = e.target.value; try { localStorage.setItem('cur', cur); } catch (x) {}
   document.querySelectorAll('.card').forEach(c => { const d = byId.get(c.dataset.id), p = c.querySelector('.price'); if (d && p) p.textContent = priceText(d); });
 });
+$('#reset').addEventListener('click', clearFilters);
 view.addEventListener('click', e => {
   if (e.target.closest('.more')) return run(true);
   const c = e.target.closest('[data-id]'); if (c) showDevice(c.dataset.id);
