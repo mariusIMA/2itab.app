@@ -210,6 +210,28 @@ function priceOf(d) {
   if (d.pc === 'USD') return rate ? { usd: d.pa, nok: d.pa * rate.nok / rate.usd } : null;
   return rate ? { usd: d.pa * rate.usd, nok: d.pa * rate.nok } : null;
 }
+
+function getThemePreference() {
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch (e) {}
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const toggle = $('#themeToggle');
+  if (toggle) toggle.checked = theme === 'dark';
+  try { localStorage.setItem('theme', theme); } catch (e) {}
+}
+
+const themeToggle = $('#themeToggle');
+if (themeToggle) {
+  themeToggle.addEventListener('change', e => applyTheme(e.target.checked ? 'dark' : 'light'));
+}
+applyTheme(getThemePreference());
+  
 const priceText = d => { const p = priceOf(d); return p ? '≈ ' + fmt[cur].format(cur === 'NOK' ? p.nok : p.usd) : (d.pt || 'Price not listed'); };
 const hasPrice = d => priceOf(d) || d.pt;
 
