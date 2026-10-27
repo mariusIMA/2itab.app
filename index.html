@@ -553,6 +553,12 @@ async function fetchRows(names) {
   addEventListener('scroll', queue, { passive: true });
   document.documentElement.addEventListener('mouseleave', () => { active = false; queue(); });
 })();
+{
+	"imports": {
+		"three": "https://cdn.jsdelivr.net/npm/three@0.131/build/three.module.js",
+        "jsm/": "https://cdn.jsdelivr.net/npm/three@0.131/examples/jsm/"
+    }
+}
 </script>
 </body>
 </html>
