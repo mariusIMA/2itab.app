@@ -112,17 +112,8 @@ a{color:var(--accent)}
 <svg>
   <defs>
     <filter id="distort">
-      <feTurbulence type="fractalNoise" baseFrequency="0.002 0.002" numOctaves="4" seed="1" result="turbulence"/>
-      <feColorMatrix type="hueRotate" values="" in="turbulence" result="colorMatrix1">
-            <animate
-            attributeName="values"
-            values="0;360"
-            dur="2s"
-            repeatCount="indefinite" 
-            />
-        </feColorMatrix>
-      <feDisplacementMap in="SourceGraphic" in2="colorMatrix1" scale="20" xChannelSelector="R" yChannelSelector="B" result="displacementMap">
-      </feDisplacementMap>
+      <feImage xlink:href="akio169.jpg" height="500" result="image"/>
+	    <feDisplacementMap in="SourceGraphic" in2="image" scale="50" xChannelSelector="B" yChannelSelector="B" result="displacementMap"/>
     </filter>
   </defs>
 </svg>
