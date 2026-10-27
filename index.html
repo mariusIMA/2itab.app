@@ -14,12 +14,14 @@ main{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 h1{font-size:2rem;margin:0;letter-spacing:-.02em}
 .sub{color:var(--mute);margin:0 0 20px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px}
 .search{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 input[type=search],select{max-width:100%;font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background-color:var(--panel);color:var(--ink)}
 input[type=search]{flex:1;min-width:200px}
 button{font:inherit;cursor:pointer}
-.go,.more,.reset{padding:12px 20px;border:0;border-radius:16px;background-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.go,.more,.reset,.settings-button{padding:12px 20px;border:0;border-radius:16px;background-color:var(--accent);color:var(--accent-ink);font-weight:600}
 .reset{background-color:transparent;color:var(--ink);border:1px solid var(--line)}
+.settings-button{background-color:var(--panel);color:var(--ink);border:1px solid var(--line)}
 .theme-toggle{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background-color:var(--panel);color:var(--ink);font-size:.9rem}
 .theme-toggle input{appearance:none;position:relative;width:42px;height:24px;background-color:var(--line);border-radius:999px;cursor:pointer;transition: all .2s ease;margin:0}
 .theme-toggle input::before{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s ease}
@@ -37,6 +39,18 @@ button{font:inherit;cursor:pointer}
 .note{color:var(--mute);font-size:.8rem;margin-top:16px}
 .card b{font-size:.95rem;line-height:1.3}
 .msg{color:var(--mute);padding:24px 0}
+.settings-menu{margin:12px 0 16px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 16px 40px rgba(15,0,15,.08)}
+.settings-menu[hidden]{display:none}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.setting-group{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+.setting-group h3{margin:0;font-size:.9rem;color:var(--mute)}
+.color-row{display:flex;align-items:center;gap:10px}
+.color-row label{flex:1;font-size:.85rem;color:var(--ink)}
+.color-row input[type="color"]{width:52px;height:38px;padding:0;border:1px solid var(--line);border-radius:10px;background:transparent;cursor:pointer}
+.slider-row{display:flex;flex-direction:column;gap:6px}
+.slider-row label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.85rem;color:var(--ink)}
+.slider-row input[type="range"]{width:100%}
+.settings-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 dialog{width:min(720px,94vw);max-height:90vh;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:0}
 dialog::backdrop{background:rgba(0,0,0,.5)}
 .dhead{display:flex;gap:16px;align-items:center;padding:20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
@@ -52,11 +66,44 @@ a{color:var(--accent)}
 </head>
 <body>
 <main>
-  <h1>Phone-Peep</h1>
+  <div class="toolbar">
+    <h1>Phone-Peep</h1>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <label class="theme-toggle" for="themeToggle">
-      <span>Dark mode</span>
-      <input id="themeToggle" type="checkbox" aria-label="Toggle light and dark mode">
-    </label>
+        <span>Dark mode</span>
+        <input id="themeToggle" type="checkbox" aria-label="Toggle light and dark mode">
+      </label>
+      <button class="settings-button" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsMenu">Settings</button>
+    </div>
+  </div>
+
+  <aside id="settingsMenu" class="settings-menu" hidden>
+    <div class="settings-grid">
+      <div class="setting-group">
+        <h3>Site colors</h3>
+        <div class="color-row"><label for="colorBg">Background</label><input id="colorBg" type="color" data-var="--bg" value="#ecf7f2"></div>
+        <div class="color-row"><label for="colorPanel">Panels</label><input id="colorPanel" type="color" data-var="--panel" value="#ffffff"></div>
+        <div class="color-row"><label for="colorInk">Text</label><input id="colorInk" type="color" data-var="--ink" value="#0f000f"></div>
+        <div class="color-row"><label for="colorAccent">Accent</label><input id="colorAccent" type="color" data-var="--accent" value="#0f5fdb"></div>
+        <div class="color-row"><label for="colorLine">Borders</label><input id="colorLine" type="color" data-var="--line" value="#d8dee4"></div>
+        <div class="color-row"><label for="colorMute">Muted</label><input id="colorMute" type="color" data-var="--mute" value="#5d7872"></div>
+      </div>
+
+      <div class="setting-group">
+        <h3>Magnet effect</h3>
+        <div class="slider-row"><label for="sliderRadius"><span>Radius</span><span id="valueRadius">260</span></label><input id="sliderRadius" type="range" min="80" max="420" step="5" value="260" data-setting="radius"></div>
+        <div class="slider-row"><label for="sliderPull"><span>Pull</span><span id="valuePull">10</span></label><input id="sliderPull" type="range" min="2" max="30" step="1" value="10" data-setting="pull"></div>
+        <div class="slider-row"><label for="sliderLift"><span>Lift</span><span id="valueLift">0.035</span></label><input id="sliderLift" type="range" min="0.01" max="0.2" step="0.005" value="0.035" data-setting="lift"></div>
+        <div class="slider-row"><label for="sliderTilt"><span>Tilt</span><span id="valueTilt">10</span></label><input id="sliderTilt" type="range" min="4" max="30" step="1" value="10" data-setting="tilt"></div>
+        <div class="slider-row"><label for="sliderGlare"><span>Glare</span><span id="valueGlare">0.16</span></label><input id="sliderGlare" type="range" min="0.02" max="0.5" step="0.01" value="0.16" data-setting="glare"></div>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <button class="reset" type="button" id="settingsReset">Reset defaults</button>
+    </div>
+  </aside>
+
   <p class="sub" id="sub">Search phones and view their specifications.</p>
   <form class="search" id="form" role="search">
     <input type="search" id="q" placeholder="Search by model, e.g. Pixel 8" aria-label="Search phones" autofocus>
@@ -80,16 +127,116 @@ a{color:var(--accent)}
             repeatCount="indefinite" 
             />
         </feColorMatrix>
-	    <feDisplacementMap in="SourceGraphic" in2="colorMatrix1" scale="20" xChannelSelector="R" yChannelSelector="B"result="displacementMap">
+      <feDisplacementMap in="SourceGraphic" in2="colorMatrix1" scale="20" xChannelSelector="R" yChannelSelector="B" result="displacementMap">
       </feDisplacementMap>
     </filter>
   </defs>
 </svg>
 <script>
+const DEFAULT_SITE_COLORS = {
+  '--bg': '#ecf7f2',
+  '--panel': '#ffffff',
+  '--ink': '#0f000f',
+  '--mute': '#5d7872',
+  '--line': '#d8dee4',
+  '--accent': '#0f5fdb',
+};
+const DEFAULT_MAGNET = { radius: 260, pull: 10, lift: 0.035, tilt: 10, glare: 0.16 };
+let magnetSettings = { ...DEFAULT_MAGNET };
+
+function saveSiteSettings() {
+  try {
+    const data = {
+      colors: Object.fromEntries(Object.entries(DEFAULT_SITE_COLORS).map(([key]) => [key, getComputedStyle(document.documentElement).getPropertyValue(key).trim()])),
+      magnet: { ...magnetSettings }
+    };
+    localStorage.setItem('site-settings', JSON.stringify(data));
+  } catch (e) {}
+}
+
+function restoreSiteSettings() {
+  try {
+    const raw = localStorage.getItem('site-settings');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.colors) {
+      Object.entries(parsed.colors).forEach(([key, value]) => {
+        if (value) document.documentElement.style.setProperty(key, value);
+      });
+    }
+    if (parsed && parsed.magnet) {
+      magnetSettings = { ...DEFAULT_MAGNET, ...parsed.magnet };
+    }
+  } catch (e) {}
+}
+
+function resetSiteSettings() {
+  Object.entries(DEFAULT_SITE_COLORS).forEach(([key, value]) => document.documentElement.style.setProperty(key, value));
+  magnetSettings = { ...DEFAULT_MAGNET };
+  saveSiteSettings();
+  syncSettingControls();
+}
+
+function syncSettingControls() {
+  Object.entries(DEFAULT_SITE_COLORS).forEach(([key]) => {
+    const input = document.querySelector(`[data-var="${key}"]`);
+    if (input) input.value = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
+  });
+  Object.entries(DEFAULT_MAGNET).forEach(([key]) => {
+    const input = document.querySelector(`[data-setting="${key}"]`);
+    const outputId = `value${key.charAt(0).toUpperCase() + key.slice(1)}`;
+    const output = document.getElementById(outputId);
+    if (input) {
+      input.value = String(magnetSettings[key]);
+    }
+    if (output) {
+      const num = Number(magnetSettings[key]);
+      const digits = (key === 'lift' || key === 'glare') ? 3 : 0;
+      output.textContent = num.toFixed(digits).replace(/\.0+$/, '').replace(/(\.\d)0+$/, '$1');
+    }
+  });
+}
+
+function applyColorSetting(target) {
+  const key = target.dataset.var;
+  document.documentElement.style.setProperty(key, target.value);
+  saveSiteSettings();
+}
+
+function applyMagnetSetting(target) {
+  const key = target.dataset.setting;
+  const value = Number(target.value);
+  magnetSettings[key] = value;
+  const outputId = `value${key.charAt(0).toUpperCase() + key.slice(1)}`;
+  const output = document.getElementById(outputId);
+  if (output) {
+    const digits = (key === 'lift' || key === 'glare') ? 3 : 0;
+    output.textContent = value.toFixed(digits).replace(/\.0+$/, '').replace(/(\.\d)0+$/, '$1');
+  }
+  saveSiteSettings();
+}
+
+const settingsMenu = document.getElementById('settingsMenu');
+const settingsToggle = document.getElementById('settingsToggle');
+if (settingsToggle && settingsMenu) {
+  settingsToggle.addEventListener('click', () => {
+    const open = settingsMenu.hidden;
+    settingsMenu.hidden = !open;
+    settingsToggle.setAttribute('aria-expanded', String(open));
+  });
+}
+
+document.querySelectorAll('[data-var]').forEach(input => input.addEventListener('input', e => applyColorSetting(e.target)));
+document.querySelectorAll('[data-setting]').forEach(input => input.addEventListener('input', e => applyMagnetSetting(e.target)));
+document.getElementById('settingsReset')?.addEventListener('click', resetSiteSettings);
+
+restoreSiteSettings();
+syncSettingControls();
+
 // ===== Settings =====
-const SOURCE_CURRENCY = 'BDT';                       // currency the prices in your dataset are written in
-const DATA_NAMES = ['data.csv', 'data.json'];        // main dataset, placed next to this file
-const EXTRA_NAMES = ['extra.csv', 'extra.json'];     // optional extra phones, same columns
+const SOURCE_CURRENCY = 'BDT';
+const DATA_NAMES = ['data.csv', 'data.json'];
+const EXTRA_NAMES = ['extra.csv', 'extra.json'];
 
 // <core>
 function parseCSV(text) {
@@ -154,7 +301,6 @@ function matchScore(item, q) {
   for (const t of q.tokens) { const s = tokenScore(t, item.words); if (s < 0) return null; total += s; }
   return total;
 }
-// "21.999" and "1,299" are thousands (3 digits after the last separator); "12.50" is a decimal.
 function parseNum(s) {
   const m = String(s).match(/\d[\d.,]*/); if (!m) return NaN;
   const t = m[0].replace(/[.,]+$/, '');
@@ -196,7 +342,7 @@ function buildItems(rows) {
 // ===== Page =====
 const $ = s => document.querySelector(s);
 const view = $('#view'), dlg = $('#dlg');
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const label = k => { const t = k.replace(/[_-]+/g, ' ').trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
 const val = v => /^https?:\/\/\S+$/.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a>` : esc(v);
 const fmt = { NOK: new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }),
@@ -205,7 +351,6 @@ let cur = 'NOK', all = [], priceKs = [], imgK = '', results = [], shown = 0, tim
 try { cur = localStorage.getItem('cur') || 'NOK'; } catch (e) {}
 $('#cur').value = cur;
 
-// Exchange rate: live from open.er-api.com (cached 12 h); approximate fallback for BDT.
 async function loadRate() {
   const S = SOURCE_CURRENCY;
   try { const c = JSON.parse(localStorage.getItem('rate')); if (c && c.s === S && Date.now() - c.t < 432e5) return (rate = c.r); } catch (e) {}
@@ -218,7 +363,7 @@ async function loadRate() {
       return rate;
     }
   } catch (e) {}
-  if (S === 'BDT') rate = { usd: 1 / 122, nok: 0.0836 };   // rough fallback
+  if (S === 'BDT') rate = { usd: 1 / 122, nok: 0.0836 };
   return rate;
 }
 function priceOf(d) {
@@ -247,10 +392,9 @@ if (themeToggle) {
   themeToggle.addEventListener('change', e => applyTheme(e.target.checked ? 'dark' : 'light'));
 }
 applyTheme(getThemePreference());
-  
+
 const priceText = d => { const p = priceOf(d); return p ? '≈ ' + fmt[cur].format(cur === 'NOK' ? p.nok : p.usd) : (d.pt || 'Price not listed'); };
 const hasPrice = d => priceOf(d) || d.pt;
-
 const thumb = d => `<div class="thumb"><span>${esc((d.brand || d.name || '?')[0])}</span>${d.img ? `<img src="${esc(d.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</div>`;
 const cardHTML = d => `<button class="card" data-id="${d.id}">${thumb(d)}<b>${esc(d.name)}</b><span class="price${hasPrice(d) ? '' : ' none'}">${esc(priceText(d))}</span></button>`;
 
@@ -320,7 +464,7 @@ async function fetchRows(names) {
       const r = await fetch(n);
       if (!r.ok) continue;
       const raw = new TextDecoder('utf-8').decode(await r.arrayBuffer());
-      if (/^\s*</.test(raw)) continue;                      // host returned an HTML page instead of the file
+      if (/^\s*</.test(raw)) continue;
       return { name: n, rows: /\.json$/i.test(n) ? rowsFromJSON(raw) : parseCSV(raw) };
     } catch (e) {}
   }
@@ -345,26 +489,23 @@ async function fetchRows(names) {
 </script>
 
 <script>
-// Magnetic + 3D tilt cards: cards drift toward the mouse, and the card under it tilts toward the cursor.
 (() => {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  const RADIUS = 260, PULL = 10, LIFT = 0.035, TILT = 10, GLARE = 0.16;
 
   const css = document.createElement('style');
   css.textContent = `
     #view .card{position:relative;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .15s}
     #view .card.mg-on{transition:transform .12s ease-out,border-color .15s}
-    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
-      transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,${GLARE}),transparent 60%)}
-    #view .card.mg-on::after{opacity:${GLARE ? 1 : 0}}`;
+    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,${magnetSettings.glare}),transparent 60%)}
+    #view .card.mg-on::after{opacity:${magnetSettings.glare ? 1 : 0}}`;
   document.head.appendChild(css);
 
   let mx = -9999, my = -9999, active = false, raf = 0;
   function frame() {
     raf = 0;
     const live = active && !document.querySelector('dialog[open]');
+    const { radius: RADIUS, pull: PULL, lift: LIFT, tilt: TILT, glare: GLARE } = magnetSettings;
     for (const c of document.querySelectorAll('#view .card')) {
       const r = c.getBoundingClientRect();
       const ox = c._mx || 0, oy = c._my || 0;
@@ -386,14 +527,18 @@ async function fetchRows(names) {
           c.style.setProperty('--gy', ((dy / h + 0.5) * 100).toFixed(1) + '%');
         }
       }
-      const t = x || y || hot
-        ? `perspective(700px) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg) scale(${s})`
-        : '';
+      const t = x || y || hot ? `perspective(700px) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg) scale(${s})` : '';
       if (c._t !== t) { c.style.transform = t; c._t = t; }
       if (c._hot !== hot) { c.classList.toggle('mg-on', hot); c._hot = hot; }
       c._mx = x; c._my = y;
     }
+    css.textContent = `
+    #view .card{position:relative;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .15s}
+    #view .card.mg-on{transition:transform .12s ease-out,border-color .15s}
+    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,${GLARE}),transparent 60%)}
+    #view .card.mg-on::after{opacity:${GLARE ? 1 : 0}}`;
   }
+
   const queue = () => raf || (raf = requestAnimationFrame(frame));
   addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; active = true; queue(); }, { passive: true });
   addEventListener('scroll', queue, { passive: true });
