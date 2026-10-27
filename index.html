@@ -95,6 +95,13 @@ a{color:var(--accent)}
   <form class="search" id="form" role="search">
     <input type="search" id="q" placeholder="Search by model, e.g. Pixel 8" aria-label="Search phones" autofocus>
     <select id="brand" aria-label="Brand"><option value="">All brands</option></select>
+    <select id="sort" aria-label="Sort by">
+      <option value="">Best match</option>
+      <option value="plow">Price: low to high</option>
+      <option value="phigh">Price: high to low</option>
+      <option value="az">Name: A–Z</option>
+      <option value="za">Name: Z–A</option>
+    </select>
     <select id="cur" aria-label="Currency"><option>NOK</option><option>USD</option></select>
     <button class="go" type="submit">Search</button>
   </form>
@@ -127,10 +134,6 @@ const DEFAULT_SITE_COLORS = {
   '--mute': '#5d7872',
   '--line': '#d8dee4',
   '--accent': '#0f5fdb',
-};
-const THEME_COLORS = {
-  light: { '--bg': '#ecf7f2', '--panel': '#ffffff', '--ink': '#0f000f', '--mute': '#5d7872', '--line': '#d8dee4', '--accent': '#0f5fdb', '--accent-ink': '#ffffff' },
-  dark: { '--bg': '#111111', '--panel': '#13031d', '--ink': '#e8edf2', '--mute': '#93a1ae', '--line': '#2a433d', '--accent': '#6affd2', '--accent-ink': '#12241d' }
 };
 const DEFAULT_MAGNET = { radius: 260, pull: 10, lift: 0.035, tilt: 10, glare: 0.16 };
 let magnetSettings = { ...DEFAULT_MAGNET };
@@ -371,11 +374,7 @@ function getThemePreference() {
 }
 
 function applyTheme(theme) {
-  const palette = THEME_COLORS[theme] || THEME_COLORS.light;
   document.documentElement.setAttribute('data-theme', theme);
-  Object.entries(palette).forEach(([key, value]) => {
-    document.documentElement.style.setProperty(key, value);
-  });
   const toggle = $('#themeToggle');
   if (toggle) toggle.checked = theme === 'dark';
   try { localStorage.setItem('theme', theme); } catch (e) {}
@@ -414,7 +413,22 @@ function run() {
     const b = d.brand || 'Other'; counts[b] = (counts[b] || 0) + 1;
   }
   let list = brand ? matches.filter(([, d]) => d.brand === brand) : matches;
-  if (q.tokens.length) list = list.slice().sort((a, b) => a[0] - b[0] || a[1].name.length - b[1].name.length);
+  const sort = $('#sort').value;
+  if (sort === 'plow' || sort === 'phigh') {
+    const v = d => { const p = priceOf(d); return p ? p.usd : null; };
+    const dir = sort === 'plow' ? 1 : -1;
+    list = list.slice().sort((a, b) => {
+      const x = v(a[1]), y = v(b[1]);
+      if (x === null && y === null) return 0;
+      if (x === null) return 1;
+      if (y === null) return -1;
+      return (x - y) * dir;
+    });
+  } else if (sort === 'az' || sort === 'za') {
+    list = list.slice().sort((a, b) => a[1].name.localeCompare(b[1].name) * (sort === 'az' ? 1 : -1));
+  } else if (q.tokens.length) {
+    list = list.slice().sort((a, b) => a[0] - b[0] || a[1].name.length - b[1].name.length);
+  }
   results = list.map(x => x[1]); shown = 0;
   setBrands(counts, q.tokens.length > 0);
   $('#count').textContent = `${results.length.toLocaleString()} phone${results.length === 1 ? '' : 's'}`;
@@ -442,6 +456,7 @@ function showDevice(id) {
 $('#form').addEventListener('submit', e => { e.preventDefault(); run(); });
 $('#q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
 $('#brand').addEventListener('change', run);
+$('#sort').addEventListener('change', run);
 $('#cur').addEventListener('change', e => {
   cur = e.target.value; try { localStorage.setItem('cur', cur); } catch (x) {}
   document.querySelectorAll('.card').forEach(c => { const d = all[+c.dataset.id], p = c.querySelector('.price'); if (d && p) p.textContent = priceText(d); });
@@ -491,7 +506,7 @@ async function fetchRows(names) {
   css.textContent = `
     #view .card{position:relative;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .15s}
     #view .card.mg-on{transition:transform .12s ease-out,border-color .15s}
-    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.55),rgba(255,255,255,0) 46%)}
+    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%), rgba(255,255,255,.5), transparent 35%)}
     #view .card.mg-on::after{opacity:${magnetSettings.glare ? 1 : 0}}`;
   document.head.appendChild(css);
 
@@ -529,7 +544,7 @@ async function fetchRows(names) {
     css.textContent = `
     #view .card{position:relative;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .15s}
     #view .card.mg-on{transition:transform .12s ease-out,border-color .15s}
-    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.55),rgba(255,255,255,0) 46%)}
+    #view .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%), rgba(255,255,255,.5), transparent 35%)}
     #view .card.mg-on::after{opacity:${GLARE ? 1 : 0}}`;
   }
 
